@@ -314,15 +314,14 @@ namespace YTY.HookTest
 
     private SocketError ConnectH(int socket, sockaddr_in* addr, int addrLen)
     {
-      if(_sockets.TryGetValue(socket,out var s))
+      if(_sockets.TryGetValue(socket,out var sockProxy))
       {
-        if(s.ProtocolType== ProtocolType.Tcp&&*((byte*)addr+4)==10)
+        if(sockProxy.ProtocolType== ProtocolType.Tcp&&*((byte*)addr+4)==10)
         {
-          s.RemoteVip = addr->Addr;
-          s.RemotePort = addr->Port;
+          sockProxy.RemoteVip = addr->Addr;
+          sockProxy.RemotePort = addr->Port;
           addr->Addr = LOOPBACK;
-          addr->Port=
-          DllImports.connect(s,)
+          addr->Port = _injectArgs.TcpProxyPort;
         }
       }
       var ret = DllImports.connect(socket, addr, addrLen);
@@ -636,7 +635,7 @@ namespace YTY.HookTest
 
     private static ushort HostToNetworkOrder(ushort port)
     {
-      return 
+      return (ushort)System.Net.IPAddress.HostToNetworkOrder((short)port);
     }
   }
 }

@@ -50,9 +50,39 @@ namespace YTY.HookTest
 
     public void Close()
     {
-      _bw.Close();
-      _tcpClient.Close();
-      _udpProxy.Close();
+      if (_bw != null)
+      {
+        _bw.Close();
+      }
+      if (_br != null)
+      {
+        _br.Close();
+      }
+      if (_stream != null)
+      {
+        _stream.Close();
+      }
+      if (_tcpClient != null && _tcpClient.Connected)
+      {
+        _tcpClient.Close();
+      }
+      if (_udpProxy != null)
+      {
+        _udpProxy.Close();
+      }
+      if (_tcpListener != null)
+      {
+        try
+        {
+          if (_tcpListener.Server != null && _tcpListener.Server.IsBound)
+          {
+            _tcpListener.Stop();
+          }
+        }
+        catch
+        {
+        }
+      }
     }
 
     private async Task UdpProxyLoop()
