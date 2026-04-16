@@ -7,7 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace YTY.HookTest
+namespace AgeHood.HookTest
 {
   public partial class Form1 : Form
   {
@@ -22,45 +22,44 @@ namespace YTY.HookTest
       InitializeComponent();
     }
 
-    private void Form1_Load(object sender, EventArgs e)
+    private async void Form1_Load(object sender, EventArgs e)
     {
       txtServerAddress.Text = $"{_proxy.RemoteHost}:{_proxy.RemotePort}";
       AppendLog("========== 程序启动 ==========");
-      
-      Task.Run(() =>
+
+      // 启动代理（异步等待以便在启动失败时能正确捕获异常并更新 UI）
+      _proxyStarting = true;
+      try
       {
-        try
-        {
-          AppendLog("正在尝试启用网络代理服务……");
-          _proxyStarting = true;
-          Invoke(new Action(() => UpdateProxyStatus()));
-          _proxy.Start();
-          AppendLog("✅ 代理服务已启动");
-          AppendLog($"   UDP代理端口: {_proxy.UdpProxyPort}");
-          AppendLog($"   TCP代理端口: {_proxy.TcpProxyPort}");
-          AppendLog($"   虚拟IP: {_proxy.VirtualIp}");
-        }
-        catch (Exception ex)
-        {
-          AppendLog($"❌ 代理服务启动失败: {ex.Message}");
-        }
-        finally
-        {
-          _proxyStarting = false;
-          Invoke(new Action(() => UpdateProxyStatus()));
-        }
-      });
-      
+        AppendLog("正在尝试启用网络代理服务……");
+        UpdateProxyStatus();
+        await _proxy.Start();
+        AppendLog("✅ 代理服务已启动");
+        AppendLog($"   UDP代理端口: {_proxy.UdpProxyPort}");
+        AppendLog($"   TCP代理端口: {_proxy.TcpProxyPort}");
+        AppendLog($"   虚拟IP: {_proxy.VirtualIp}");
+      }
+      catch (Exception ex)
+      {
+        AppendLog($"❌ 代理服务启动失败: {ex.Message}");
+      }
+      finally
+      {
+        _proxyStarting = false;
+        UpdateProxyStatus();
+      }
+
       if (!_pipeLoopStarted)
       {
         _pipeLoopStarted = true;
         Task.Run(() => PipeLoop());
         AppendLog("✅ 命名管道服务已启动");
       }
-      
+
       AppendLog("请点击上方按钮选择游戏可执行文件");
-      
-      Task.Run(() => MonitorGameProcess());
+
+      // 启动后台任务监控游戏进程
+      _ = MonitorGameProcess();
     }
     
     private async Task MonitorGameProcess()
@@ -92,7 +91,7 @@ namespace YTY.HookTest
         return;
       }
       
-      if (_proxy.State == TransferProxy.ProxyState.Started)
+      if (_proxy.State == TransferProxy.ProxyState.Running)
       {
         var virtualIpStr = $"{(_proxy.VirtualIp >> 24) & 0xFF}.{(_proxy.VirtualIp >> 16) & 0xFF}.{(_proxy.VirtualIp >> 8) & 0xFF}.{_proxy.VirtualIp & 0xFF}";
         lblProxyStatus.Text = $"代理已启用 UDP: {_proxy.UdpProxyPort} | TCP: {_proxy.TcpProxyPort} | {virtualIpStr}";
@@ -106,39 +105,35 @@ namespace YTY.HookTest
       lnkProxyAction.Text = "启动";
     }
     
-    private void LnkProxyAction_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+    private async void LnkProxyAction_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
     {
-      if (_proxy.State == TransferProxy.ProxyState.Started)
+      if (_proxy.State == TransferProxy.ProxyState.Running)
       {
         _proxy.Close();
         AppendLog("已停止网络代理服务");
         UpdateProxyStatus();
+        return;
       }
-      else
+
+      _proxyStarting = true;
+      try
       {
-        Task.Run(() =>
-        {
-          try
-          {
-            AppendLog("正在尝试启用网络代理服务……");
-            _proxyStarting = true;
-            Invoke(new Action(() => UpdateProxyStatus()));
-            _proxy.Start();
-            AppendLog("✅ 代理服务已启动");
-            AppendLog($"   UDP代理端口: {_proxy.UdpProxyPort}");
-            AppendLog($"   TCP代理端口: {_proxy.TcpProxyPort}");
-            AppendLog($"   虚拟IP: {_proxy.VirtualIp}");
-          }
-          catch (Exception ex)
-          {
-            AppendLog($"❌ 代理服务启动失败: {ex.Message}");
-          }
-          finally
-          {
-            _proxyStarting = false;
-            Invoke(new Action(() => UpdateProxyStatus()));
-          }
-        });
+        AppendLog("正在尝试启用网络代理服务……");
+        UpdateProxyStatus();
+        await _proxy.Start();
+        AppendLog("✅ 代理服务已启动");
+        AppendLog($"   UDP代理端口: {_proxy.UdpProxyPort}");
+        AppendLog($"   TCP代理端口: {_proxy.TcpProxyPort}");
+        AppendLog($"   虚拟IP: {_proxy.VirtualIp}");
+      }
+      catch (Exception ex)
+      {
+        AppendLog($"❌ 代理服务启动失败: {ex.Message}");
+      }
+      finally
+      {
+        _proxyStarting = false;
+        UpdateProxyStatus();
       }
     }
     

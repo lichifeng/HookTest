@@ -7,7 +7,7 @@ using EasyHook;
 using System.IO;
 using System.IO.Pipes;
 
-namespace YTY.HookTest
+namespace AgeHood.HookTest
 {
   public class HookConsole
   {

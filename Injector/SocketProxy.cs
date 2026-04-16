@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net.Sockets;
 
-namespace YTY.HookTest
+namespace AgeHood.HookTest
 {
   public class SocketProxy
   {

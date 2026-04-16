@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 
-namespace YTY.HookTest
+namespace AgeHood.HookTest
 {
   internal static unsafe class DllImports
   {

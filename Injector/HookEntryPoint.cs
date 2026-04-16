@@ -13,9 +13,9 @@ using System.Net;
 using System.Diagnostics;
 using System.Drawing;
 using System.Net.Sockets;
-using static YTY.HookTest.Delegates;
+using static AgeHood.HookTest.Delegates;
 
-namespace YTY.HookTest
+namespace AgeHood.HookTest
 {
   public unsafe class HookEntryPoint : IEntryPoint
   {

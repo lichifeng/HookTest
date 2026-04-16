@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace YTY.HookTest
+namespace AgeHood.HookTest
 {
   static class Program
   {
