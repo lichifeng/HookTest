@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
@@ -43,26 +43,57 @@ namespace YTY.HookTest
 
     public void Run(RemoteHooking.IContext context, InjectArgs injectArgs)
     {
-      if (_currentProcess.ProcessName.Equals(AGE2_X1, StringComparison.InvariantCultureIgnoreCase))
+      try
       {
-        _kvs = new IniParser.FileIniDataParser().ReadFile("language.dll.ini", Encoding.UTF8).Sections["Language.dll"];
-        //var hTextOut = LocalHook.Create(LocalHook.GetProcAddress("gdi32", "TextOutA"), new TextOutAD(TextOutH), this);
-        //hTextOut.ThreadACL.SetExclusiveACL(new[] { 0 });
-        //var hLoadString = LocalHook.Create(LocalHook.GetProcAddress("user32", "LoadStringA"), new LoadStringD(LoadStringH), this);
-        //hLoadString.ThreadACL.SetExclusiveACL(new[] { 0 });
-        //var hLoadLibrary = LocalHook.Create(LocalHook.GetProcAddress("kernel32", "LoadLibraryA"), new LoadLibraryAD(LoadLibraryH), this);
-        //hLoadLibrary.ThreadACL.SetExclusiveACL(new[] { 0 });
-        //var hDrawTextA = LocalHook.Create(LocalHook.GetProcAddress("user32", "DrawTextA"), new DrawTextAD(DrawTextH), this);
-        //hDrawTextA.ThreadACL.SetExclusiveACL(new[] { 0 });
-        var hCreateProcessA = LocalHook.Create(LocalHook.GetProcAddress("kernel32", "CreateProcessA"), new CreateProcessAD(CreateProcessAH), this);
-        hCreateProcessA.ThreadACL.SetExclusiveACL(new[] { 0 });
-        var hPostQuitMessage = LocalHook.Create(LocalHook.GetProcAddress("user32", "PostQuitMessage"), new PostQuitMessageD(PostQuitMessageH), this);
-        hPostQuitMessage.ThreadACL.SetExclusiveACL(new[] { 0 });
-      }
-      var pipe = new NamedPipeClientStream("HookPipe");
-      pipe.Connect();
-      _sw = new StreamWriter(pipe);
-      _sw.AutoFlush = true;
+        if (_currentProcess.ProcessName.Equals(AGE2_X1, StringComparison.InvariantCultureIgnoreCase))
+        {
+          try
+          {
+            _kvs = new IniParser.FileIniDataParser().ReadFile("language.dll.ini", Encoding.UTF8).Sections["Language.dll"];
+          }
+          catch
+          {
+            _kvs = null;
+          }
+          //var hTextOut = LocalHook.Create(LocalHook.GetProcAddress("gdi32", "TextOutA"), new TextOutAD(TextOutH), this);
+          //hTextOut.ThreadACL.SetExclusiveACL(new[] { 0 });
+          //var hLoadString = LocalHook.Create(LocalHook.GetProcAddress("user32", "LoadStringA"), new LoadStringD(LoadStringH), this);
+          //hLoadString.ThreadACL.SetExclusiveACL(new[] { 0 });
+          //var hLoadLibrary = LocalHook.Create(LocalHook.GetProcAddress("kernel32", "LoadLibraryA"), new LoadLibraryAD(LoadLibraryH), this);
+          //hLoadLibrary.ThreadACL.SetExclusiveACL(new[] { 0 });
+          //var hDrawTextA = LocalHook.Create(LocalHook.GetProcAddress("user32", "DrawTextA"), new DrawTextAD(DrawTextH), this);
+          //hDrawTextA.ThreadACL.SetExclusiveACL(new[] { 0 });
+          var hCreateProcessA = LocalHook.Create(LocalHook.GetProcAddress("kernel32", "CreateProcessA"), new CreateProcessAD(CreateProcessAH), this);
+          hCreateProcessA.ThreadACL.SetExclusiveACL(new[] { 0 });
+          var hPostQuitMessage = LocalHook.Create(LocalHook.GetProcAddress("user32", "PostQuitMessage"), new PostQuitMessageD(PostQuitMessageH), this);
+          hPostQuitMessage.ThreadACL.SetExclusiveACL(new[] { 0 });
+        }
+        
+        NamedPipeClientStream pipe = null;
+        for (int i = 0; i < 30; i++)
+        {
+          try
+          {
+            pipe = new NamedPipeClientStream("HookPipe");
+            pipe.Connect(1000);
+            break;
+          }
+          catch
+          {
+            pipe?.Dispose();
+            pipe = null;
+            Thread.Sleep(500);
+          }
+        }
+        
+        if (pipe == null)
+        {
+          RemoteHooking.WakeUpProcess();
+          return;
+        }
+        
+        _sw = new StreamWriter(pipe);
+        _sw.AutoFlush = true;
       //var hGetACP = LocalHook.Create(LocalHook.GetProcAddress("kernel32", "GetACP"), new GetACPD(GetACPH), this);
       //hGetACP.ThreadACL.SetExclusiveACL(new[] { 0 });
       var hAccept = LocalHook.Create(LocalHook.GetProcAddress("ws2_32", "accept"), new AcceptD(AcceptH), this);
@@ -111,6 +142,11 @@ namespace YTY.HookTest
       });
       RemoteHooking.WakeUpProcess();
       Thread.Sleep(-1);
+      }
+      catch
+      {
+        RemoteHooking.WakeUpProcess();
+      }
     }
 
     private MakeArgs DebugOutput([System.Runtime.CompilerServices.CallerMemberName()]string caller = "")

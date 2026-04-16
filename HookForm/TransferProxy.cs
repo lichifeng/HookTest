@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -13,6 +13,14 @@ namespace YTY.HookTest
 {
   public class TransferProxy
   {
+    public enum ProxyState
+    {
+      NotStarted,
+      Starting,
+      Started,
+      Stopped
+    }
+
     private readonly TcpListener _tcpListener = new TcpListener(IPAddress.Loopback,0);
     private readonly TcpClient _tcpClient = new TcpClient();
     private readonly UdpClient _udpProxy = new UdpClient(new IPEndPoint(IPAddress.Loopback, 0));
@@ -22,12 +30,15 @@ namespace YTY.HookTest
     private ushort _udpProxyPort;
     private ushort _tcpProxyPort;
     private uint _virtualIp;
+    private ProxyState _state = ProxyState.NotStarted;
 
     public ushort UdpProxyPort => _udpProxyPort;
 
     public ushort TcpProxyPort => _tcpProxyPort;
 
     public uint VirtualIp => _virtualIp;
+
+    public ProxyState State => _state;
 
     public TransferProxy()
     {
@@ -37,19 +48,30 @@ namespace YTY.HookTest
 
     public void Start()
     {
-      _tcpClient.Connect("yty1.club", 11111);
-      _stream = _tcpClient.GetStream();
-      _br = new BinaryReader(_stream);
-      _bw = new BinaryWriter(_stream);
-      _virtualIp = _br.ReadUInt32();
-      _tcpListener.Start();
-      UdpProxyLoop();
-      StreamLoop();
-      TcpProxyLoop();
+      _state = ProxyState.Starting;
+      try
+      {
+        _tcpClient.Connect("yty1.club", 11111);
+        _stream = _tcpClient.GetStream();
+        _br = new BinaryReader(_stream);
+        _bw = new BinaryWriter(_stream);
+        _virtualIp = _br.ReadUInt32();
+        _tcpListener.Start();
+        UdpProxyLoop();
+        StreamLoop();
+        TcpProxyLoop();
+        _state = ProxyState.Started;
+      }
+      catch
+      {
+        _state = ProxyState.NotStarted;
+        throw;
+      }
     }
 
     public void Close()
     {
+      _state = ProxyState.Stopped;
       if (_bw != null)
       {
         _bw.Close();
