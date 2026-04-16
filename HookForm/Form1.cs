@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -18,6 +18,7 @@ namespace YTY.HookTest
   public partial class Form1 : Form
   {
     private readonly TransferProxy _proxy = new TransferProxy();
+    private string _selectedGamePath;
 
     public Form1()
     {
@@ -29,24 +30,39 @@ namespace YTY.HookTest
       // _proxy.Start();
       
       AppendLog("========== 程序启动 ==========");
-      AppendLog("正在读取帝国时代2安装路径...");
-      
-      var exePath = (string)Microsoft.Win32.Registry.LocalMachine.CreateSubKey(@"SOFTWARE\Microsoft\Microsoft Games\Age of Empires II: The Conquerors Expansion\1.0").GetValue("EXE Path");
-      AppendLog($"注册表读取到的路径: {exePath}");
-      
-      if (string.IsNullOrEmpty(exePath))
+      AppendLog("请点击上方按钮选择游戏可执行文件");
+    }
+    
+    private void BtnSelectGame_Click(object sender, EventArgs e)
+    {
+      using (var openFileDialog = new OpenFileDialog())
       {
-        AppendLog("❌ 错误: 无法读取帝国时代2安装路径！");
-        AppendLog("请确保已安装帝国时代2：征服者");
+        openFileDialog.Filter = "可执行文件 (*.exe)|*.exe|所有文件 (*.*)|*.*";
+        openFileDialog.Title = "选择帝国时代2可执行文件";
+        openFileDialog.FileName = "age2_x1.exe";
+        
+        if (openFileDialog.ShowDialog() == DialogResult.OK)
+        {
+          _selectedGamePath = openFileDialog.FileName;
+          toolStripStatusLabel1.Text = _selectedGamePath;
+          AppendLog($"✅ 已选择游戏文件: {_selectedGamePath}");
+          
+          StartGameAndInject();
+        }
+      }
+    }
+    
+    private void StartGameAndInject()
+    {
+      if (string.IsNullOrEmpty(_selectedGamePath))
+      {
+        AppendLog("❌ 错误: 请先选择游戏文件！");
         return;
       }
       
-      var gameExePath = Path.Combine(exePath, @"age2_x1\age2_x1.exe");
-      AppendLog($"游戏完整路径: {gameExePath}");
-      
-      if (!File.Exists(gameExePath))
+      if (!File.Exists(_selectedGamePath))
       {
-        AppendLog($"❌ 错误: 找不到游戏文件: {gameExePath}");
+        AppendLog($"❌ 错误: 找不到游戏文件: {_selectedGamePath}");
         return;
       }
       
@@ -74,7 +90,7 @@ namespace YTY.HookTest
       
       try
       {
-        RemoteHooking.CreateAndInject(gameExePath, null, 0, injectArgs.DllPath, injectArgs.DllPath, out var pid, injectArgs);
+        RemoteHooking.CreateAndInject(_selectedGamePath, null, 0, injectArgs.DllPath, injectArgs.DllPath, out var pid, injectArgs);
         AppendLog($"✅ 注入成功！游戏进程ID: {pid}");
         AppendLog("========== 等待游戏连接 ==========");
       }
@@ -104,16 +120,18 @@ namespace YTY.HookTest
 
     private async Task PipeLoop()
     {
-      using (var pipe = new NamedPipeServerStream("HookPipe", PipeDirection.InOut, NamedPipeServerStream.MaxAllowedServerInstances, PipeTransmissionMode.Byte, PipeOptions.Asynchronous))
+      while (true)
       {
-        await Task.Factory.FromAsync(pipe.BeginWaitForConnection, pipe.EndWaitForConnection, null);
-        PipeLoop();
-        using (var sr = new StreamReader(pipe))
+        using (var pipe = new NamedPipeServerStream("HookPipe", PipeDirection.InOut, NamedPipeServerStream.MaxAllowedServerInstances, PipeTransmissionMode.Byte, PipeOptions.Asynchronous))
         {
-          string line;
-          while ((line = await sr.ReadLineAsync()) != null)
+          await Task.Factory.FromAsync(pipe.BeginWaitForConnection, pipe.EndWaitForConnection, null);
+          using (var sr = new StreamReader(pipe))
           {
-            richTextBox1.AppendText(line + '\n');
+            string line;
+            while ((line = await sr.ReadLineAsync()) != null)
+            {
+              richTextBox1.AppendText(line + '\n');
+            }
           }
         }
       }
