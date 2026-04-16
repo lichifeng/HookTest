@@ -341,29 +341,53 @@ namespace YTY.HookTest
         _gameProcess = Process.GetProcessById(pid);
         AppendLog($"   进程名称: {_gameProcess.ProcessName}");
         AppendLog($"   进程路径: {_gameProcess.MainModule?.FileName ?? "未知"}");
-        AppendLog($"   主窗口句柄: {(_gameProcess.MainWindowHandle != IntPtr.Zero ? _gameProcess.MainWindowHandle.ToString() : "无")}");
         
         UpdateStatusLabel();
         UpdateButtonStates();
         
-        Task.Delay(2000).ContinueWith(t =>
+        Task.Run(async () =>
         {
           try
           {
-            var p = Process.GetProcessById(pid);
-            if (p.MainWindowHandle == IntPtr.Zero)
+            var windowFound = false;
+            var maxRetries = 30;
+            var retryInterval = 500;
+            
+            for (int i = 0; i < maxRetries; i++)
+            {
+              await Task.Delay(retryInterval);
+              try
+              {
+                var p = Process.GetProcessById(pid);
+                if (p.MainWindowHandle != IntPtr.Zero)
+                {
+                  AppendLog($"✅ 游戏窗口已显示 (句柄: {p.MainWindowHandle})");
+                  windowFound = true;
+                  break;
+                }
+              }
+              catch (ArgumentException)
+              {
+                AppendLog("❌ 错误: 游戏进程已退出！");
+                _gameProcess = null;
+                break;
+              }
+            }
+            
+            if (!windowFound && _gameProcess != null)
             {
               AppendLog("⚠️  警告: 游戏进程已启动但主窗口未显示");
             }
-            UpdateStatusLabel();
-            UpdateButtonStates();
+            
+            Invoke(new Action(() =>
+            {
+              UpdateStatusLabel();
+              UpdateButtonStates();
+            }));
           }
-          catch (ArgumentException)
+          catch (Exception ex)
           {
-            AppendLog("❌ 错误: 游戏进程已退出！");
-            _gameProcess = null;
-            UpdateStatusLabel();
-            UpdateButtonStates();
+            AppendLog($"❌ 检查游戏窗口时出错: {ex.Message}");
           }
         });
         

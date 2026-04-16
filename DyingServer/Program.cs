@@ -27,13 +27,13 @@ namespace YTY.HookTest
       Instance.Run();
       Console.ReadLine();
       Instance.tcpListener.Stop();
-      Console.WriteLine("server stopped");
+      Console.WriteLine("Server stopped");
     }
 
     private async Task Run()
     {
       tcpListener.Start();
-      Console.WriteLine("server started");
+      Console.WriteLine("Server started");
       while (true)
       {
         var tcpClient = await tcpListener.AcceptTcpClientAsync();

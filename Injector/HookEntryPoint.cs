@@ -32,7 +32,7 @@ namespace YTY.HookTest
     private readonly HashSet<IntPtr> _dlls = new HashSet<IntPtr>();
     private readonly BlockingCollection<string> _q = new BlockingCollection<string>();
     private ConcurrentDictionary<int, SocketProxy> _sockets = new ConcurrentDictionary<int, SocketProxy>();
-    private string _fakeHostName = "条顿武士";
+    private string _fakeHostName = "FakeGame";
     private string _trueHostName;
 
     public HookEntryPoint(RemoteHooking.IContext context, InjectArgs injectArgs)
