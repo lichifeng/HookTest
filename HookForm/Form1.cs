@@ -24,6 +24,7 @@ namespace YTY.HookTest
 
     private void Form1_Load(object sender, EventArgs e)
     {
+      txtServerAddress.Text = $"{_proxy.RemoteHost}:{_proxy.RemotePort}";
       AppendLog("========== 程序启动 ==========");
       
       Task.Run(() =>
@@ -378,18 +379,18 @@ namespace YTY.HookTest
     
     private void AppendLog(string message)
     {
-      if (richTextBox1.InvokeRequired)
+      if (debugBox.InvokeRequired)
       {
-        richTextBox1.Invoke(new Action(() => AppendLog(message)));
+        debugBox.Invoke(new Action(() => AppendLog(message)));
         return;
       }
       
       var logMessage = $"[{DateTime.Now:HH:mm:ss.fff}] {message}\n";
-      richTextBox1.AppendText(logMessage);
+      debugBox.AppendText(logMessage);
       
       if (chkAutoScroll.Checked)
       {
-        richTextBox1.ScrollToCaret();
+        debugBox.ScrollToCaret();
       }
     }
 
@@ -425,6 +426,45 @@ namespace YTY.HookTest
           await Task.Delay(1000);
         }
       }
+    }
+
+    private void BtnUpdateServer_Click(object sender, EventArgs e)
+    {
+      var input = txtServerAddress.Text.Trim();
+      if (string.IsNullOrEmpty(input))
+      {
+        MessageBox.Show("请输入服务器地址", "错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        AppendLog("❌ 更新服务器地址失败: 输入为空");
+        return;
+      }
+
+      var parts = input.Split(':');
+      if (parts.Length != 2)
+      {
+        MessageBox.Show("地址格式不正确，请使用格式：主机名:端口", "错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        AppendLog($"❌ 更新服务器地址失败: 格式错误 - {input}");
+        return;
+      }
+
+      var host = parts[0].Trim();
+      if (string.IsNullOrEmpty(host))
+      {
+        MessageBox.Show("主机名不能为空", "错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        AppendLog("❌ 更新服务器地址失败: 主机名为空");
+        return;
+      }
+
+      if (!int.TryParse(parts[1].Trim(), out var port) || port < 1 || port > 65535)
+      {
+        MessageBox.Show("端口号无效，请输入1-65535之间的有效端口", "错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        AppendLog($"❌ 更新服务器地址失败: 无效端口 - {parts[1]}");
+        return;
+      }
+
+      _proxy.RemoteHost = host;
+      _proxy.RemotePort = port;
+      AppendLog($"✅ 远程服务器地址已更新: {host}:{port}");
+      AppendLog("   提示: 重启代理服务后新地址生效");
     }
 
     private void Form1_FormClosing(object sender, FormClosingEventArgs e)

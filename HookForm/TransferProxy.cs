@@ -1,13 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading.Tasks;
-using System.IO;
-using System.Dynamic;
-using Newtonsoft.Json;
 
 namespace YTY.HookTest
 {
@@ -31,6 +25,8 @@ namespace YTY.HookTest
     private ushort _tcpProxyPort;
     private uint _virtualIp;
     private ProxyState _state = ProxyState.NotStarted;
+    private string _remoteHost = "localhost";
+    private int _remotePort = 52300;
 
     public ushort UdpProxyPort => _udpProxyPort;
 
@@ -39,6 +35,18 @@ namespace YTY.HookTest
     public uint VirtualIp => _virtualIp;
 
     public ProxyState State => _state;
+
+    public string RemoteHost
+    {
+      get => _remoteHost;
+      set => _remoteHost = value;
+    }
+
+    public int RemotePort
+    {
+      get => _remotePort;
+      set => _remotePort = value;
+    }
 
     public TransferProxy()
     {
@@ -51,7 +59,7 @@ namespace YTY.HookTest
       _state = ProxyState.Starting;
       try
       {
-        _tcpClient.Connect("yty1.club", 11111);
+        _tcpClient.Connect(_remoteHost, _remotePort);
         _stream = _tcpClient.GetStream();
         _br = new BinaryReader(_stream);
         _bw = new BinaryWriter(_stream);

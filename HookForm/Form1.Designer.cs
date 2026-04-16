@@ -40,12 +40,17 @@ namespace YTY.HookTest
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.richTextBox1 = new System.Windows.Forms.RichTextBox();
+            this.debugBox = new System.Windows.Forms.RichTextBox();
+            this.serverConfigPanel = new System.Windows.Forms.Panel();
+            this.btnUpdateServer = new System.Windows.Forms.Button();
+            this.txtServerAddress = new System.Windows.Forms.TextBox();
+            this.lblServerAddress = new System.Windows.Forms.Label();
             this.topPanel.SuspendLayout();
             this.rightButtonPanel.SuspendLayout();
             this.middlePanel.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.panel1.SuspendLayout();
+            this.serverConfigPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // topPanel
@@ -167,7 +172,7 @@ namespace YTY.HookTest
             this.statusStrip1.ImageScalingSize = new System.Drawing.Size(32, 32);
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusLabel1});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 889);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 929);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Size = new System.Drawing.Size(1450, 41);
             this.statusStrip1.TabIndex = 4;
@@ -181,32 +186,87 @@ namespace YTY.HookTest
             // 
             // panel1
             // 
-            this.panel1.Controls.Add(this.richTextBox1);
+            this.panel1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.panel1.Controls.Add(this.debugBox);
+            this.panel1.Controls.Add(this.serverConfigPanel);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 116);
             this.panel1.Name = "panel1";
             this.panel1.Padding = new System.Windows.Forms.Padding(15);
-            this.panel1.Size = new System.Drawing.Size(1450, 773);
+            this.panel1.Size = new System.Drawing.Size(1450, 813);
             this.panel1.TabIndex = 2;
             // 
-            // richTextBox1
+            // debugBox
             // 
-            this.richTextBox1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.richTextBox1.Font = new System.Drawing.Font("宋体", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.richTextBox1.Location = new System.Drawing.Point(15, 15);
-            this.richTextBox1.Margin = new System.Windows.Forms.Padding(3, 0, 3, 3);
-            this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.ReadOnly = true;
-            this.richTextBox1.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.ForcedVertical;
-            this.richTextBox1.Size = new System.Drawing.Size(1420, 743);
-            this.richTextBox1.TabIndex = 1;
-            this.richTextBox1.Text = "";
+            this.debugBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.debugBox.Font = new System.Drawing.Font("宋体", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.debugBox.Location = new System.Drawing.Point(15, 15);
+            this.debugBox.Margin = new System.Windows.Forms.Padding(3, 0, 3, 15);
+            this.debugBox.Name = "debugBox";
+            this.debugBox.ReadOnly = true;
+            this.debugBox.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.ForcedVertical;
+            this.debugBox.Size = new System.Drawing.Size(1420, 725);
+            this.debugBox.TabIndex = 1;
+            this.debugBox.Text = "";
+            // 
+            // serverConfigPanel
+            // 
+            this.serverConfigPanel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.serverConfigPanel.Controls.Add(this.btnUpdateServer);
+            this.serverConfigPanel.Controls.Add(this.txtServerAddress);
+            this.serverConfigPanel.Controls.Add(this.lblServerAddress);
+            this.serverConfigPanel.Location = new System.Drawing.Point(15, 746);
+            this.serverConfigPanel.Name = "serverConfigPanel";
+            this.serverConfigPanel.Size = new System.Drawing.Size(1420, 52);
+            this.serverConfigPanel.TabIndex = 6;
+            // 
+            // btnUpdateServer
+            // 
+            this.btnUpdateServer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnUpdateServer.AutoSize = true;
+            this.btnUpdateServer.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.btnUpdateServer.Location = new System.Drawing.Point(1349, 9);
+            this.btnUpdateServer.Name = "btnUpdateServer";
+            this.btnUpdateServer.Size = new System.Drawing.Size(68, 34);
+            this.btnUpdateServer.TabIndex = 2;
+            this.btnUpdateServer.Text = "更新";
+            this.btnUpdateServer.UseVisualStyleBackColor = true;
+            this.btnUpdateServer.Click += new System.EventHandler(this.BtnUpdateServer_Click);
+            // 
+            // txtServerAddress
+            // 
+            this.txtServerAddress.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtServerAddress.Location = new System.Drawing.Point(963, 8);
+            this.txtServerAddress.Margin = new System.Windows.Forms.Padding(3, 3, 15, 3);
+            this.txtServerAddress.Name = "txtServerAddress";
+            this.txtServerAddress.Size = new System.Drawing.Size(350, 35);
+            this.txtServerAddress.TabIndex = 1;
+            this.txtServerAddress.Text = "localhost:52300";
+            // 
+            // lblServerAddress
+            // 
+            this.lblServerAddress.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblServerAddress.AutoSize = true;
+            this.lblServerAddress.Font = new System.Drawing.Font("宋体", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.lblServerAddress.Location = new System.Drawing.Point(741, 12);
+            this.lblServerAddress.Margin = new System.Windows.Forms.Padding(3);
+            this.lblServerAddress.MinimumSize = new System.Drawing.Size(0, 22);
+            this.lblServerAddress.Name = "lblServerAddress";
+            this.lblServerAddress.Size = new System.Drawing.Size(215, 27);
+            this.lblServerAddress.TabIndex = 0;
+            this.lblServerAddress.Text = "远程服务器地址:";
+            this.lblServerAddress.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 24F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1450, 930);
+            this.ClientSize = new System.Drawing.Size(1450, 970);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.middlePanel);
             this.Controls.Add(this.statusStrip1);
@@ -225,6 +285,8 @@ namespace YTY.HookTest
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
             this.panel1.ResumeLayout(false);
+            this.serverConfigPanel.ResumeLayout(false);
+            this.serverConfigPanel.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -243,6 +305,10 @@ namespace YTY.HookTest
     private System.Windows.Forms.StatusStrip statusStrip1;
     private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
     private System.Windows.Forms.Panel panel1;
-    private System.Windows.Forms.RichTextBox richTextBox1;
+    private System.Windows.Forms.RichTextBox debugBox;
+    private System.Windows.Forms.Panel serverConfigPanel;
+    private System.Windows.Forms.Label lblServerAddress;
+    private System.Windows.Forms.TextBox txtServerAddress;
+    private System.Windows.Forms.Button btnUpdateServer;
   }
 }
