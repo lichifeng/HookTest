@@ -16,11 +16,16 @@ namespace AgeHood.HookTest
             Stopped
         }
 
+        public enum ProxyCommand
+        {
+            DesgnatedVirtualIp = 0,
+            UdpSendTo = 1
+        }
+
         private readonly TcpListener _tcpListener = new TcpListener(IPAddress.Loopback, 0); // 0: random available port
         private readonly TcpClient _tcpClient = new TcpClient();
         private readonly UdpClient _udpProxy = new UdpClient(new IPEndPoint(IPAddress.Loopback, 0));
         private NetworkStream _stream;
-        // writer semaphore to serialize writes to the network stream
         private readonly SemaphoreSlim _writeSemaphore = new SemaphoreSlim(1, 1);
         private readonly ushort _udpProxyPort;
         private readonly ushort _tcpProxyPort;
@@ -77,8 +82,9 @@ namespace AgeHood.HookTest
 
                 _tcpListener.Start();
 
-                _ = UdpProxyLoop();
-                _ = StreamLoop();
+                _ = CmdInHandler();
+                _ = UdpOutProxy();
+
                 _ = TcpProxyLoop();
 
                 _state = ProxyState.Running;
@@ -117,15 +123,22 @@ namespace AgeHood.HookTest
             }
         }
 
-        private async Task UdpProxyLoop()
+        /// <summary>
+        /// UDP代理循环方法
+        /// 负责接收本地UDP端口的数据包，并通过TCP流转发到远程服务器
+        /// </summary>
+        /// <returns>异步任务</returns>
+        private async Task UdpOutProxy()
         {
             while (true)
             {
                 var result = await _udpProxy.ReceiveAsync();
                 var packet = result.Buffer;
-                // Forward raw packet to remote over TCP stream
+                
+                // 检查TCP流是否可用，若可用则转发数据包
                 if (_stream != null)
                 {
+                    // 获取写入信号量，确保线程安全
                     await _writeSemaphore.WaitAsync();
                     try
                     {
@@ -140,12 +153,12 @@ namespace AgeHood.HookTest
             }
         }
 
-        private async Task StreamLoop()
+        private async Task CmdInHandler()
         {
             var header = new byte[17];
             while (true)
             {
-                // read exactly 17 bytes header
+                // Read header, 17 bytes
                 var read = 0;
                 while (read < 17)
                 {
@@ -155,29 +168,29 @@ namespace AgeHood.HookTest
                 }
 
                 var command = header[0];
-                var fromVip = (uint)(header[1] | (header[2] << 8) | (header[3] << 16) | (header[4] << 24));
-                var fromPort = (ushort)(header[5] | (header[6] << 8));
-                var toVip = (uint)(header[7] | (header[8] << 8) | (header[9] << 16) | (header[10] << 24));
-                var toPort = (ushort)(header[11] | (header[12] << 8));
-                var length = header[13] | (header[14] << 8) | (header[15] << 16) | (header[16] << 24);
+                var srcIP = (uint)(header[1] | (header[2] << 8) | (header[3] << 16) | (header[4] << 24));
+                var srcPort = (ushort)(header[5] | (header[6] << 8));
+                var destIP = (uint)(header[7] | (header[8] << 8) | (header[9] << 16) | (header[10] << 24));
+                var destPort = (ushort)(header[11] | (header[12] << 8));
+                var dataLen = header[13] | (header[14] << 8) | (header[15] << 16) | (header[16] << 24);
 
-                var data = new byte[length];
+                var data = new byte[dataLen];
                 read = 0;
-                while (read < length)
+                while (read < dataLen)
                 {
-                    var n = await _stream.ReadAsync(data, read, length - read);
+                    var n = await _stream.ReadAsync(data, read, dataLen - read);
                     if (n == 0) throw new EndOfStreamException("Remote closed connection while reading payload");
                     read += n;
                 }
 
-                var packet = new byte[length + 17];
+                var packet = new byte[dataLen + 17];
                 Buffer.BlockCopy(header, 0, packet, 0, 17);
-                Buffer.BlockCopy(data, 0, packet, 17, length);
+                Buffer.BlockCopy(data, 0, packet, 17, dataLen);
 
                 switch (command)
                 {
                     case 1://udp sendto
-                        await _udpProxy.SendAsync(packet, packet.Length, new IPEndPoint(IPAddress.Loopback, toPort));
+                        await _udpProxy.SendAsync(packet, packet.Length, new IPEndPoint(IPAddress.Loopback, destPort));
                         break;
                 }
             }
