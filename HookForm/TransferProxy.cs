@@ -16,7 +16,7 @@ namespace AgeHood.HookTest
             Stopped
         }
 
-        public enum ProxyCommand
+        public enum ServerCommand
         {
             DesgnatedVirtualIp,
             UdpSendTo
@@ -214,7 +214,7 @@ namespace AgeHood.HookTest
                     }
                     if (read < 17) break;
 
-                    var command = header[0];
+                    var cmd = (ServerCommand)header[0];
                     var srcIP = (uint)(header[1] | (header[2] << 8) | (header[3] << 16) | (header[4] << 24));
                     var srcPort = (ushort)(header[5] | (header[6] << 8));
                     var destIP = (uint)(header[7] | (header[8] << 8) | (header[9] << 16) | (header[10] << 24));
@@ -235,9 +235,9 @@ namespace AgeHood.HookTest
                     Buffer.BlockCopy(header, 0, packet, 0, 17);
                     Buffer.BlockCopy(data, 0, packet, 17, dataLen);
 
-                    switch (command)
+                    switch (cmd)
                     {
-                        case 1://udp sendto
+                        case ServerCommand.UdpSendTo:
                             if (_udpProxy != null && _state == ProxyState.Running)
                             {
                                 await _udpProxy.SendAsync(packet, packet.Length, new IPEndPoint(IPAddress.Loopback, destPort));
